@@ -1,5 +1,4 @@
 import win32gui, win32con, curses, sys, time
-from pynput.keyboard import Key, Listener
 CURSES_COLORS = [curses.COLOR_WHITE, curses.COLOR_BLACK, curses.COLOR_RED, curses.COLOR_BLUE, curses.COLOR_GREEN, curses.COLOR_MAGENTA, curses.COLOR_CYAN, curses.COLOR_YELLOW]
 FRAMERATE = 60
 KEY_LEFT = "a"
@@ -215,7 +214,7 @@ def list_remove(list, obj):
         return new_list
     except ValueError:
         return list
-        
+
 
 def play_game():
     def _play_game(stdscr):
@@ -252,6 +251,7 @@ def play_game():
         test_list2 = list_remove(test_list, 8)
 
         prev_time = time.perf_counter()
+        prev_time2 = time.perf_counter()
         while playing:
             debug_messages = [f"{time.perf_counter()}",
                               f"{frame=}", 
@@ -264,30 +264,31 @@ def play_game():
                               f"{all(c == -1 for c in t_list)}",
                               f"{locked=}",
                               f"{prev_frame=}",
-                              f"{prev_case=}"
+                              f"{prev_case=}",
                               ]
+            if time.perf_counter() - prev_time2 >= 1/30:
+                code = stdscr.getch()
+                code2= stdscr.getch()
+                prev_time2 = time.perf_counter()
+                
             # Limit FPS to FRAMERATE
             if time.perf_counter() - prev_time >= 1/FRAMERATE:
                 prev_time = time.perf_counter()
-                #if frame == 60:
-                 #   frame = 0
                 frame += 1
+                
                 
                 
                 if len(code_list) == 11:
                     code_list.pop(0)
                     
                 ## USER INPUT
-                code = stdscr.getch()
-                code2= stdscr.getch()
-                code3 = stdscr.getch()
+                
                 code_list.append(code)
                 
-                    
                 if locked:
-                    if all(c == -1 for c in t_list) and frame < prev_frame+25:
+                    if all(c == -1 for c in t_list) and frame < prev_frame+29:
                         code = prev_case
-                    elif not all(c== -1 for c in t_list) or frame >= prev_frame+25:
+                    elif not all(c== -1 for c in t_list) or frame >= prev_frame+29:
                         locked = False
                         
                 if code != -1:
@@ -343,14 +344,12 @@ def play_game():
                             player.x_speed = 0
                     player.sprite.change_animation("default") 
                     prev_case = -1   
-                
+                prev_code = code_list[-1]
                             
                 if player.x_speed <= -0x1000 or player.x_speed >= 0x1000:
                                 player.moving = True
                 else: 
                     player.moving = False
-                        
-                    
                 
                 if player.moving and frame % 10 == 0:
                     if player.sprite.current_animation in ("walkingL", "walkingR"):
